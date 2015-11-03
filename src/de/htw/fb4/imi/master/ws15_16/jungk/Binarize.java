@@ -8,6 +8,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import de.htw.fb4.imi.master.ws15_16.feldmann_foellmer.util.ImageUtil;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.Factory;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.outline.Outline;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.treshold.IsoData;
@@ -175,7 +176,7 @@ public class Binarize extends JPanel {
 
 		// paint result
 		int[][] outlinePixels = outlineAlgorithm.executeOutline();
-		dstPixels = outlineAlgorithm.getFlatArray(width, height, outlinePixels);
+		dstPixels = ImageUtil.getFlatArray(width, height, outlinePixels);
 		dstView.setPixels(dstPixels, width, height);
 
 		// dstView.saveImage("out.png");

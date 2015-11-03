@@ -12,18 +12,23 @@ import java.util.Queue;
 
 import javax.jws.WebParam.Mode;
 
+import de.htw.fb4.imi.master.ws15_16.feldmann_foellmer.util.ImageUtil;
+
 /**
  * Implementation of flood filling.
  *
  * @since 27.10.2015
  */
 public class FloodFilling {
+	private static final int NOT_LABELED = 0;
+	private static final int START_LABEL = 1;
+
 	public enum Mode {
 		NEIGHBOURS4, NEIGHBOURS8
 	}
 
 	private int[][] originalBinaryPixels;
-	private int[][] fillPixels;
+	private int[][] labeledPixels;
 
 	protected int width;
 	protected int height;
@@ -57,7 +62,13 @@ public class FloodFilling {
 			for (int y = 0; y < height; y++) {
 				int pos = calc1DPosition(width, x, y);
 
-				this.originalBinaryPixels[x][y] = originalPixels[pos];
+				if (ImageUtil.isForegoundPixel(originalPixels[pos])) {
+					this.originalBinaryPixels[x][y] = 1; 
+				} else {
+					this.originalBinaryPixels[x][y] = 0;
+				}
+				
+				this.labeledPixels[x][y] = NOT_LABELED; // not labeled
 			}
 		}
 	}
@@ -74,6 +85,22 @@ public class FloodFilling {
 		int pos = y * width + x;
 		return pos;
 	}
+	
+	public void execute()
+	{
+		int label = START_LABEL;
+		
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				if (1 == this.originalBinaryPixels[x][y]
+						&& NOT_LABELED == this.labeledPixels[x][y]) {
+					this.depthFirst(x, y, label);
+					
+					label++;
+				}
+			}
+		}
+	}
 
 	/**
 	 * mit stack
@@ -88,7 +115,7 @@ public class FloodFilling {
 			int y = p.y;
 			int pos = calc1DPosition(width, x, y);
 
-			if ((x >= 0) && (x < width) && (y >= 0) && (y < height) && pos == 1) {
+			if ((x >= 0) && (x < width) && (y >= 0) && (y < height) && this.originalBinaryPixels[x][y] == 1) {
 				// ip.putPixel(x, y, label);
 				// kernelmitte (x,y) mit label zeichnen
 
@@ -101,6 +128,8 @@ public class FloodFilling {
 						push8Neighbour(S, x, y);
 						break;
 				}
+				
+				this.labeledPixels[u][v] = label;
 			}
 		}
 	}

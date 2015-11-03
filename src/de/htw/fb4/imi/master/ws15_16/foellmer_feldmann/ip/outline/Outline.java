@@ -5,6 +5,8 @@
  */
 package de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.outline;
 
+import de.htw.fb4.imi.master.ws15_16.feldmann_foellmer.util.ImageUtil;
+
 /**
  * Implementation of an outline algorithm including all necessary steps such as eroding, reverting and reflecting pixels.
  *
@@ -12,6 +14,8 @@ package de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.outline;
  */
 public class Outline {
 
+
+	
 	private int[][] originalBinaryPixels;
 	private int[][] erodedPixels;
 	private int[][] outlinePixels;
@@ -29,13 +33,13 @@ public class Outline {
 		this.structureElement = new int[3][3];
 
 		this.structureElement[0][0] = 0;
-		this.structureElement[0][1] = 0xff000000;
+		this.structureElement[0][1] = ImageUtil.FOREGROUND_VALUE;
 		this.structureElement[0][2] = 0;
-		this.structureElement[1][0] = 0xff000000;
-		this.structureElement[1][1] = 0xff000000;
-		this.structureElement[1][2] = 0xff000000;
+		this.structureElement[1][0] = ImageUtil.FOREGROUND_VALUE;
+		this.structureElement[1][1] = ImageUtil.FOREGROUND_VALUE;
+		this.structureElement[1][2] = ImageUtil.FOREGROUND_VALUE;
 		this.structureElement[2][0] = 0;
-		this.structureElement[2][1] = 0xff000000;
+		this.structureElement[2][1] = ImageUtil.FOREGROUND_VALUE;
 		this.structureElement[2][2] = 0;
 	}
 
@@ -58,18 +62,14 @@ public class Outline {
 
 		for (int x = 0; x < width; x++) {
 			for (int y = 0; y < height; y++) {
-				int pos = calc1DPosition(width, x, y);
+				int pos = ImageUtil.calc1DPosition(width, x, y);
 
 				this.originalBinaryPixels[x][y] = originalPixels[pos];
 			}
 		}
 	}
 	
-	private int calc1DPosition(int width, int x, int y) {
-		int pos = y * width + x;
-		return pos;
-	}
-
+	
 	/**
 	 * Set the original pixels as 2d-array as it's internally expected.
 	 * 
@@ -172,26 +172,5 @@ public class Outline {
 				}
 			}
 		}
-	}
-	
-	/**
-	 * Use this method to get a 1-d array by a given 2d one.
-	 * 
-	 * @param width
-	 * @param height
-	 * @param pixels
-	 * @return
-	 */
-	public int[] getFlatArray(int width, int height, int[][] pixels) {
-		int[] flat = new int[width * height];
-
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				int pos = calc1DPosition(width, i, j);
-				flat[pos] = pixels[i][j];
-			}
-		}
-
-		return flat;
 	}
 }
