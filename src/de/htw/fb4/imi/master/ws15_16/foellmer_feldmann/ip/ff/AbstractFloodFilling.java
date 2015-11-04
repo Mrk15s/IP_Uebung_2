@@ -58,7 +58,7 @@ public abstract class AbstractFloodFilling extends Observable {
 					this.originalBinaryPixels[x][y] = 0;
 				}
 
-				this.labeledPixels[x][y] = NOT_LABELED; // not labeled
+				this.labeledPixels[x][y] = NOT_LABELED; // in the beginning, all pixels are not labeled
 			}
 		}
 	}
@@ -76,9 +76,12 @@ public abstract class AbstractFloodFilling extends Observable {
 	}
 
 	protected boolean canBeLabeled(int x, int y) {
-		return 1 == this.originalBinaryPixels[x][y] && NOT_LABELED == this.labeledPixels[x][y];
+		return this.isForegroundPixel(x, y) && NOT_LABELED == this.labeledPixels[x][y];
 	}
 	
+	protected boolean isForegroundPixel(int x, int y) {
+		return 1 == this.originalBinaryPixels[x][y];
+	}
 	protected boolean isWithinImageBoundaries(int x, int y) {
 		return (x >= 0) && (x < width) && (y >= 0) && (y < height); 
 	}

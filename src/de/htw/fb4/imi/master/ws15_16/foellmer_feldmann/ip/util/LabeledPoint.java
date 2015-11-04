@@ -19,7 +19,7 @@ public class LabeledPoint extends Point {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private int label;
+	private int label = 0;
 
 	public LabeledPoint(int x, int y, int label) {
 		super(x, y);
