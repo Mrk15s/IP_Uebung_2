@@ -33,5 +33,40 @@ public class LabeledPoint extends Point {
 
 	public void setLabel(int label) {
 		this.label = label;
-	}		
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("LabeledPoint [getLabel()=");
+		builder.append(getLabel());
+		builder.append(", getX()=");
+		builder.append(getX());
+		builder.append(", getY()=");
+		builder.append(getY());
+		builder.append("]");
+		return builder.toString();
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + label;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		LabeledPoint other = (LabeledPoint) obj;
+		if (label != other.label)
+			return false;
+		return true;
+	}			
 }

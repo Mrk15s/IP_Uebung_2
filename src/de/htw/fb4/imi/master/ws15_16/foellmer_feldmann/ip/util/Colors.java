@@ -17,6 +17,11 @@ public class Colors {
 	public static final int GREEN = 0xff00ff00; 
 	public static final int YELLOW = 0xfff7ff00;
 	public static final int ORANGE = 0xffff9d00;
+	public static final int LIGHT_BLUE = 0xff00e5ff;
+	public static final int LIGHT_GREEN = 0xff00ff7b;
+	public static final int LIGHT_RED = 0xfffa6161;
 	public static final int BLACK = 0xff000000;
 	public static final Integer WHITE = 0xffffffff;
+	public static final Integer GREY = 0xff8a8a8a;
+	public static final Integer VIOLETT = 0xff6e0065;
 }

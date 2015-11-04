@@ -27,11 +27,11 @@ public class BreadthFirst extends AbstractFloodFilling {
 	private void executeFloodFillingInScanLineOrder() {
 		int label = START_LABEL;
 
-		// walk through image pixels in scan-line order, execute depth first on
+		// walk through image pixels in scan-line order, execute on
 		// unlabeled foreground pixels
 		for (int x = 0; x < width; x++) {
 			for (int y = 0; y < height; y++) {
-				if (1 == this.originalBinaryPixels[x][y] && NOT_LABELED == this.labeledPixels[x][y]) {
+				if (canBeLabeled(x, y)) {
 					this.breadthFirst(x, y, label);
 
 					label++;
@@ -39,7 +39,35 @@ public class BreadthFirst extends AbstractFloodFilling {
 			}
 		}
 	}
-
+	
+	/**
+	 * mit queue
+	 */
+	public void breadthFirst(int u, int v, int label) {
+		Queue<Point> Q = new LinkedList<Point>(); // queue Q
+		Q.add(new Point(u, v));
+		while (!Q.isEmpty()) {
+			Point p = Q.remove(); // get the next point to process
+			int x = p.x;
+			int y = p.y;
+			
+			if ((x >= 0) && (x < width) && (y >= 0) && (y < height) 
+				&& canBeLabeled(x, y)) {
+				
+				switch (this.mode) {
+					case NEIGHBOURS4:
+						queue4Neighbour(Q, x, y);
+						break;
+					case NEIGHBOURS8:
+						queue8Neighbour(Q, x, y);
+						break;
+					}
+				
+				labelPixel(x, y, label);
+			}
+		}
+	}
+	
 	private void queue4Neighbour(Queue<Point> q, int x, int y) {
 		q.add(new Point(x + 1, y));
 		q.add(new Point(x, y + 1));
@@ -56,29 +84,5 @@ public class BreadthFirst extends AbstractFloodFilling {
 		q.add(new Point(x - 1, y - 1));
 		q.add(new Point(x - 1, y));
 		q.add(new Point(x - 1, y + 1));
-	}
-
-	/**
-	 * mit queue
-	 */
-	public void breadthFirst(int u, int v, int label) {
-		Queue<Point> Q = new LinkedList<Point>(); // queue Q
-		Q.add(new Point(u, v));
-		while (!Q.isEmpty()) {
-			Point p = Q.remove(); // get the next point to process
-			int x = p.x;
-			int y = p.y;
-			
-			if ((x >= 0) && (x < width) && (y >= 0) && (y < height) &&  1 == this.originalBinaryPixels[x][y]) {
-				switch (this.mode) {
-				case NEIGHBOURS4:
-					queue4Neighbour(Q, x, y);
-					break;
-				case NEIGHBOURS8:
-					queue8Neighbour(Q, x, y);
-					break;
-				}
-			}
-		}
 	}
 }

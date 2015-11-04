@@ -3,33 +3,45 @@
 // Date: 2014-10-02
 package de.htw.fb4.imi.master.ws15_16.jungk;
 
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.filechooser.FileNameExtensionFilter;
-
-import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.Factory;
-import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.AbstractFloodFilling;
-import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.outline.Outline;
-import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.treshold.IsoData;
-import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.treshold.ThresholdFindingAlgorithm;
-import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.ImageUtil;
-import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.LabeledPoint;
-
-import java.awt.event.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Observable;
 import java.util.Observer;
 
-public class Binarize extends JPanel implements Observer {
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.Factory;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.AbstractFloodFilling;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.AbstractFloodFilling.Mode;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.treshold.ThresholdFindingAlgorithm;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.ImageUtil;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.LabeledPoint;
+
+public class FloodFillingGui extends JPanel implements Observer {
 
 	private static final long serialVersionUID = 1L;
 	private static final int border = 10;
 	private static final int maxWidth = 400;
 	private static final int maxHeight = 400;
 	private static final File openPath = new File(".");
-	private static final String title = "Binarisierung";
+	private static String title = "Flood Filling ";
 	private static final String author = "Markus Föllmer & Sascha Feldmann";
 	private static final String initalOpen = "tools.png";
 
@@ -40,7 +52,6 @@ public class Binarize extends JPanel implements Observer {
 
 	private JComboBox<String> methodList; // the selected binarization method
 	private JLabel statusLine; // to print some status text
-	private JSlider thresholdSlider;
 
 	/**
 	 * Algorithm to find the appropriate/desired threshold.
@@ -50,8 +61,12 @@ public class Binarize extends JPanel implements Observer {
 	private AbstractFloodFilling floodFillingAlgorithm;
 
 	private String message;
+	protected Mode mode;
+	private JComboBox<String> neighbourModeBox;
+	private JCheckBox debugModeCheckbox;
+	private JPanel imagesPanel;
 
-	public Binarize() {
+	public FloodFillingGui() {
 		super(new BorderLayout(border, border));
 
 		// load the default image
@@ -80,28 +95,6 @@ public class Binarize extends JPanel implements Observer {
 			}
 		});
 
-		// load image button
-		// JButton outlineBtn = new JButton("Outline");
-		// outlineBtn.addActionListener(new ActionListener() {
-		// public void actionPerformed(ActionEvent e) {
-		// createOutline();
-		// }
-		// });
-		// load outline checkbox
-		// JCheckBox outlineBox = new JCheckBox("Outline");
-		// outlineBox.addItemListener(new ItemListener() {
-		// @Override
-		// public void itemStateChanged(ItemEvent e) {
-		// if (e.getStateChange() == ItemEvent.SELECTED){
-		// createOutline();
-		// } else {
-		// binarizeImage();
-		// }
-		// // System.out.println(e.getStateChange() == ItemEvent.SELECTED ?
-		// "selected" : "unasdted");
-		// }
-		// });
-
 		// selector for the binarization method
 		JLabel methodText = new JLabel("Methode:");
 		String[] methodNames = { "---", "Verfahren mit Stack", "Verfahren mit Queue",
@@ -115,6 +108,19 @@ public class Binarize extends JPanel implements Observer {
 			}
 		});
 
+		String[] neighbourModes = { "4 neighbours", "8 neighbours" };
+
+		neighbourModeBox = new JComboBox<String>(neighbourModes);
+		neighbourModeBox.setSelectedIndex(0); // set initial method
+		neighbourModeBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				runFloodFilling();
+			}
+		});
+
+		// Debug mode checkbox
+		this.debugModeCheckbox = new JCheckBox("Debug mode");
+
 		// some status text
 		statusLine = new JLabel(" ");
 
@@ -125,13 +131,15 @@ public class Binarize extends JPanel implements Observer {
 		controls.add(load, c);
 		controls.add(methodText, c);
 		controls.add(methodList, c);
+		controls.add(neighbourModeBox, c);
+		controls.add(debugModeCheckbox, c);
 
-		JPanel images = new JPanel(new FlowLayout());
-		images.add(srcView);
-		images.add(dstView);
+		this.imagesPanel = new JPanel(new FlowLayout());
+		imagesPanel.add(srcView);
+		imagesPanel.add(dstView);
 
 		add(controls, BorderLayout.NORTH);
-		add(images, BorderLayout.CENTER);
+		add(imagesPanel, BorderLayout.CENTER);
 		add(statusLine, BorderLayout.SOUTH);
 
 		setBorder(BorderFactory.createEmptyBorder(border, border, border, border));
@@ -153,10 +161,12 @@ public class Binarize extends JPanel implements Observer {
 
 	private static void createAndShowGUI() {
 		// create and setup the window
-		frame = new JFrame(title + " - " + author + " - " + initalOpen);
+		title = title + " - " + author + " - ";
+
+		frame = new JFrame(title + initalOpen);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		JComponent newContentPane = new Binarize();
+		JComponent newContentPane = new FloodFillingGui();
 		newContentPane.setOpaque(true); // content panes must be opaque
 		frame.setContentPane(newContentPane);
 
@@ -181,6 +191,7 @@ public class Binarize extends JPanel implements Observer {
 	protected void runFloodFilling() {
 
 		String methodName = (String) methodList.getSelectedItem();
+		String neighbourMode = (String) neighbourModeBox.getSelectedItem();
 
 		// image dimensions
 		int width = srcView.getImgWidth();
@@ -189,64 +200,83 @@ public class Binarize extends JPanel implements Observer {
 		// get pixels arrays
 		int srcPixels[] = srcView.getPixels();
 		int dstPixels[] = java.util.Arrays.copyOf(srcPixels, srcPixels.length);
+		dstView.setPixels(dstPixels, width, height);
+		frame.pack();
 
 		// this.message = "Binarisieren mit \"" + methodName + "\"";
-		this.message = "Auffinden von Bildregionen mit \"" + methodName + "\"";
+		this.message = "Auffinden von Bildregionen mit \"" + methodName + "\" und \"" + neighbourMode + "\" ";
 
 		statusLine.setText(message);
 
 		long startTime = System.currentTimeMillis();
 
 		switch (methodList.getSelectedIndex()) {
-			case 1: // depth first
-				message += "iterativem Verfahren mit Stack; ";
-				System.out.println("depth first");
-	
-				this.floodFillingAlgorithm = Factory.newDepthFirst(this);
-				showImageRegions(dstPixels);
-				break;
-			case 2: // breadth first
-				message += "iterativem Verfahren mit Queue; ";
-				System.out.println("breadth first");
-	
-				this.floodFillingAlgorithm = Factory.newBreadthFirst(this);
-				showImageRegions(dstPixels);
-				break;
-			case 3: // sequentiellen Regionenmarkierung
-				message += "sequentieller Regionenmarkierung; ";
-				System.out.println(" sequentiellen Regionenmarkierung");
-	
-				this.floodFillingAlgorithm = Factory.newSequential(this);
-				showImageRegions(dstPixels);
-				break;
-				// other cases: do not change dstPixels
+		case 1: // depth first
+			message += "iterativem Verfahren mit Stack; ";
+
+			this.floodFillingAlgorithm = Factory.newDepthFirst(this);
+			showImageRegions(dstPixels);
+			break;
+		case 2: // breadth first
+			message += "iterativem Verfahren mit Queue; ";
+
+			this.floodFillingAlgorithm = Factory.newBreadthFirst(this);
+			showImageRegions(dstPixels);
+			break;
+		case 3: // sequentiellen Regionenmarkierung
+			message += "sequentieller Regionenmarkierung; ";
+
+			this.floodFillingAlgorithm = Factory.newSequential(this);
+			showImageRegions(dstPixels);
+			break;
+		// other cases: do not change dstPixels
 		}
 
 		long time = System.currentTimeMillis() - startTime;
 
-		dstView.setPixels(dstPixels, width, height);
+		if (!this.isDebug()) {
+			dstView.setPixels(dstPixels, width, height);
+			frame.pack();
+		}
 
 		// dstView.saveImage("out.png");
-
-		frame.pack();
 
 		statusLine.setText(message + " in " + time + " ms");
 	}
 
+	private Mode getMode() {
+		if (this.neighbourModeBox.getSelectedIndex() == 0) {
+			return Mode.NEIGHBOURS4;
+		} else {
+			return Mode.NEIGHBOURS8;
+		}
+	}
+
+	private boolean isDebug() {
+		return this.debugModeCheckbox.isSelected();
+	}
+
 	private void showImageRegions(int[] dstPixels) {
+		this.floodFillingAlgorithm.setMode(this.getMode());
 		this.floodFillingAlgorithm.setOriginalBinaryPixels(this.srcView.getImgWidth(), this.srcView.getImgHeight(),
 				this.srcView.getPixels());
-		
-		this.floodFillingAlgorithm.execute();
-		
-		/*int[] labeledPixels = ImageUtil.getFlatArray(this.srcView.getImgWidth(), this.srcView.getImgHeight(),
-				this.floodFillingAlgorithm.execute());
 
-		this.colorRegionsByLabel(dstPixels, labeledPixels);*/
+		if (this.isDebug()) {
+			// in debug mode, the regions will be drawn on single label change
+			this.floodFillingAlgorithm.execute();
+		} else {
+			// in non-debug mode, the regions will be drawn when all labels were
+			// set
+			this.floodFillingAlgorithm.deleteObservers();
+
+			int[] labeledPixels = ImageUtil.getFlatArray(this.srcView.getImgWidth(), this.srcView.getImgHeight(),
+					this.floodFillingAlgorithm.execute());
+
+			this.colorRegionsByLabel(dstPixels, labeledPixels);
+		}
 	}
 
 	/**
-	 * @deprecated since the GUI is an observer now and the pixels are colored immediatly when the label changed
 	 * @param dstPixels
 	 * @param labeledPixels
 	 */
@@ -273,21 +303,34 @@ public class Binarize extends JPanel implements Observer {
 	}
 
 	@Override
-	public void update(Observable o, Object arg) {
-		// color a pixel in the destination view when its label changed
+	public void update(Observable o, final Object arg) {
+		// color a pixel in the destination view when its label changed (should
+		// only be called in debug mode since it slows down the process)
 		if (arg instanceof LabeledPoint) {
 			LabeledPoint point = (LabeledPoint) arg;
-			
+
 			int[] labelPixels = dstView.getPixels();
-			
-			int labelPos = ImageUtil.calc1DPosition(
-					this.srcView.getImgWidth(),
-					(int) point.getX(),
-					(int) point.getY());
-			
+
+			int labelPos = ImageUtil.calc1DPosition(srcView.getImgWidth(), (int) point.getX(), (int) point.getY());
+
 			labelPixels[labelPos] = ImageUtil.mapLabelToColor(point.getLabel());
+
+			dstView.setPixels(labelPixels, srcView.getImgWidth(), srcView.getImgHeight());
 			
-			dstView.setPixels(labelPixels);
-		}		
+			javax.swing.SwingUtilities.invokeLater(new Runnable() {
+			    public void run() {
+					// TODO check why GUI isn't updated
+			    	dstView.invalidate();
+			        dstView.repaint();  // repaint(), etc. according to changed states
+			        
+			        imagesPanel.invalidate();
+			        imagesPanel.repaint();
+			        
+			        frame.repaint();
+			    }
+			});
+
+			System.out.println("Updated " + point);
+		}
 	}
 }

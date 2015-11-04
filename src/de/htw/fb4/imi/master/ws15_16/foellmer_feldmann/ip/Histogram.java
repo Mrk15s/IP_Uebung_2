@@ -7,7 +7,7 @@ package de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip;
 
 import java.util.Arrays;
 
-import de.htw.fb4.imi.master.ws15_16.jungk.Binarize;
+import de.htw.fb4.imi.master.ws15_16.jungk.FloodFillingGui;
 
 /**
  * A histogram that currently allows to calculate and frequency of pixel values within an image
@@ -71,7 +71,7 @@ public class Histogram {
 		reset(pixels);
 		
 		for (int i = 0; i < pixels.length; i++) {
-			int greyValue = Binarize.calculateGrayValue(pixels[i]);
+			int greyValue = FloodFillingGui.calculateGrayValue(pixels[i]);
 			this.absoluteFrequencies[greyValue]++;
 			double relativeFrequency = (this.absoluteFrequencies[greyValue] * 100 / this.numberOfPixels);
 			this.relativeFrequencies[greyValue] = relativeFrequency;

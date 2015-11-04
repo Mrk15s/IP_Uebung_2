@@ -26,13 +26,18 @@ public class ImageUtil {
 		if (null == labelColorMap) {
 			labelColorMap = new HashMap<>();
 			
-			labelColorMap.put(AbstractFloodFilling.NOT_LABELED, Colors.WHITE); // red
-			labelColorMap.put(1, Colors.RED); // red
-			labelColorMap.put(2, Colors.BLUE); // blue
-			labelColorMap.put(3, Colors.GREEN); // green
-			labelColorMap.put(4, Colors.YELLOW); // yellow
-			labelColorMap.put(5, Colors.ORANGE); // orange
-			labelColorMap.put(5, Colors.BLACK); // black
+			// define the mapping of labels and colors here
+			labelColorMap.put(AbstractFloodFilling.NOT_LABELED, Colors.WHITE);
+			labelColorMap.put(AbstractFloodFilling.START_LABEL, Colors.RED);
+			labelColorMap.put(AbstractFloodFilling.START_LABEL + 1, Colors.BLUE);
+			labelColorMap.put(AbstractFloodFilling.START_LABEL + 2, Colors.GREEN);
+			labelColorMap.put(AbstractFloodFilling.START_LABEL + 3, Colors.YELLOW);
+			labelColorMap.put(AbstractFloodFilling.START_LABEL + 4, Colors.ORANGE);
+			labelColorMap.put(AbstractFloodFilling.START_LABEL + 5, Colors.LIGHT_BLUE); 
+			labelColorMap.put(AbstractFloodFilling.START_LABEL + 6, Colors.LIGHT_GREEN);
+			labelColorMap.put(AbstractFloodFilling.START_LABEL + 7, Colors.LIGHT_RED);
+			labelColorMap.put(AbstractFloodFilling.START_LABEL + 8, Colors.GREY);
+			labelColorMap.put(AbstractFloodFilling.START_LABEL + 9, Colors.VIOLETT);
 		}
 		
 		return labelColorMap;
@@ -50,7 +55,8 @@ public class ImageUtil {
 		if (colorMap.containsKey(label)) {
 			return colorMap.get(label);
 		} else {
-			return 0xff000000;
+			// no color for label number defined
+			return Colors.BLACK;
 		}
 	}
 	
