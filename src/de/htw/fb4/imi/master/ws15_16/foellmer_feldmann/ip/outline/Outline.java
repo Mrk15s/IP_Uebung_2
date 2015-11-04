@@ -5,17 +5,14 @@
  */
 package de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.outline;
 
-import de.htw.fb4.imi.master.ws15_16.feldmann_foellmer.util.ImageUtil;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.ImageUtil;
 
 /**
  * Implementation of an outline algorithm including all necessary steps such as eroding, reverting and reflecting pixels.
  *
  * @since 20.10.2015
  */
-public class Outline {
-
-
-	
+public class Outline {	
 	private int[][] originalBinaryPixels;
 	private int[][] erodedPixels;
 	private int[][] outlinePixels;
@@ -67,8 +64,7 @@ public class Outline {
 				this.originalBinaryPixels[x][y] = originalPixels[pos];
 			}
 		}
-	}
-	
+	}	
 	
 	/**
 	 * Set the original pixels as 2d-array as it's internally expected.

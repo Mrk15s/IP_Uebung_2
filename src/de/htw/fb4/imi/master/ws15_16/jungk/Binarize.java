@@ -8,11 +8,12 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import de.htw.fb4.imi.master.ws15_16.feldmann_foellmer.util.ImageUtil;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.Factory;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.AbstractFloodFilling;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.outline.Outline;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.treshold.IsoData;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.treshold.ThresholdFindingAlgorithm;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.ImageUtil;
 
 import java.awt.event.*;
 import java.awt.*;
@@ -42,6 +43,9 @@ public class Binarize extends JPanel {
 	 * Algorithm to find the appropriate/desired threshold.
 	 */
 	private ThresholdFindingAlgorithm thresholdAlgorithm;
+	
+	private AbstractFloodFilling floodFillingAlgorithm;
+	
 	private String message;
 
 	public Binarize() {
@@ -268,14 +272,23 @@ public class Binarize extends JPanel {
 		case 0: // depth first
 			message += "iterativem Verfahren mit Stack; ";
 			System.out.println("depth first");
+			
+			this.floodFillingAlgorithm = Factory.newDepthFirst();
+			showImageRegions(dstPixels);
 			break;
 		case 1: // breadth first
 			message += "iterativem Verfahren mit Queue; ";
 			System.out.println("breadth first");
+			
+			this.floodFillingAlgorithm = Factory.newBreadthFirst();
+			showImageRegions(dstPixels);
 			break;
 		case 2: // sequentiellen Regionenmarkierung
 			message += "sequentieller Regionenmarkierung; ";
 			System.out.println(" sequentiellen Regionenmarkierung");
+			
+			this.floodFillingAlgorithm = Factory.newSequential();
+			showImageRegions(dstPixels);
 			break;
 		}
 
@@ -288,6 +301,19 @@ public class Binarize extends JPanel {
 		frame.pack();
 
 		statusLine.setText(message + " in " + time + " ms");
+	}
+
+	private void showImageRegions(int[] dstPixels) {
+		this.floodFillingAlgorithm.setOriginalBinaryPixels(this.srcView.getWidth(), this.srcView.getHeight(), this.srcView.getPixels());
+		int[] labeledPixels = ImageUtil.getFlatArray(this.srcView.getWidth(), this.srcView.getHeight(), this.floodFillingAlgorithm.execute());		
+		
+		this.colorRegionsByLabel(dstPixels, labeledPixels);
+	}
+
+	private void colorRegionsByLabel(int[] dstPixels, int[] labeledPixels) {
+		for (int i = 0; i < labeledPixels.length; i++) {
+			dstPixels[i] = ImageUtil.mapLabelToColor(labeledPixels[i]);
+		}		
 	}
 
 	void binarize(int pixels[]) {

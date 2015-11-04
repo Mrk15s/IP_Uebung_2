@@ -7,6 +7,10 @@ package de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip;
 
 import javax.swing.JSlider;
 
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.AbstractFloodFilling;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.BreadthFirst;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.DepthFirst;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.Sequential;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.outline.Outline;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.treshold.IsoData;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.treshold.ThresholdFindingAlgorithm;
@@ -42,5 +46,19 @@ public class Factory {
 	{
 		return new Outline();
 	}
+	
+	public static AbstractFloodFilling newDepthFirst()
+	{
+		return new DepthFirst();
+	}
 
+	public static AbstractFloodFilling newBreadthFirst()
+	{
+		return new BreadthFirst();
+	}
+	
+	public static AbstractFloodFilling newSequential()
+	{
+		return new Sequential();
+	}
 }
