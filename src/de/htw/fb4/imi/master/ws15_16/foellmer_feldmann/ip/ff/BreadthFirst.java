@@ -16,6 +16,13 @@ import java.util.Queue;
  */
 public class BreadthFirst extends AbstractFloodFilling {
 
+	private int queueMaxSize = 0;
+
+	
+	public int getMaxQueueSize() {
+		return queueMaxSize;
+	}
+
 	public int[][] execute() {
 		super.execute();
 
@@ -51,7 +58,7 @@ public class BreadthFirst extends AbstractFloodFilling {
 			int x = p.x;
 			int y = p.y;
 			
-			if ((x >= 0) && (x < width) && (y >= 0) && (y < height) 
+			if (isWithinImageBoundaries(x, y)
 				&& canBeLabeled(x, y)) {
 				
 				switch (this.mode) {
@@ -69,20 +76,32 @@ public class BreadthFirst extends AbstractFloodFilling {
 	}
 	
 	private void queue4Neighbour(Queue<Point> q, int x, int y) {
-		q.add(new Point(x + 1, y));
-		q.add(new Point(x, y + 1));
-		q.add(new Point(x, y - 1));
-		q.add(new Point(x - 1, y));
+		addToQueue(q, x + 1, y);
+		addToQueue(q, x, y + 1);
+		addToQueue(q, x, y - 1);
+		addToQueue(q, x - 1, y);
 	}
-
+	
 	private void queue8Neighbour(Queue<Point> q, int x, int y) {
-		q.add(new Point(x + 1, y));
-		q.add(new Point(x + 1, y + 1));
-		q.add(new Point(x, y + 1));
-		q.add(new Point(x + 1, y - 1));
-		q.add(new Point(x, y - 1));
-		q.add(new Point(x - 1, y - 1));
-		q.add(new Point(x - 1, y));
-		q.add(new Point(x - 1, y + 1));
+		addToQueue(q, x + 1, y);
+		addToQueue(q, x + 1, y + 1);
+		addToQueue(q, x, y + 1);
+		addToQueue(q, x + 1, y - 1);
+		addToQueue(q, x, y - 1);
+		addToQueue(q, x - 1, y - 1);
+		addToQueue(q, x - 1, y);
+		addToQueue(q, x - 1, y + 1);
+	}
+	
+	protected void addToQueue(Queue<Point> q, int newX, int newY) {
+		q.add(new Point(newX, newY));
+		
+		this.updateLargestQueueInfo(q);
+	}	
+	
+	protected void updateLargestQueueInfo(Queue<Point> q) {
+		if (q.size() > this.queueMaxSize) {
+			this.queueMaxSize = q.size();
+		}		
 	}
 }

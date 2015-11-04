@@ -25,11 +25,15 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.Factory;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.AbstractFloodFilling;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.BreadthFirst;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.AbstractFloodFilling.Mode;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.DepthFirst;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.treshold.ThresholdFindingAlgorithm;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.ImageUtil;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.LabeledPoint;
@@ -44,6 +48,8 @@ public class FloodFillingGui extends JPanel implements Observer {
 	private static String title = "Flood Filling ";
 	private static final String author = "Markus Föllmer & Sascha Feldmann";
 	private static final String initalOpen = "tools.png";
+	private static final int TEXTAREA_COLS = 30;
+	private static final int TEXTAREA_ROWS = 5;
 
 	private static JFrame frame;
 
@@ -51,7 +57,7 @@ public class FloodFillingGui extends JPanel implements Observer {
 	private ImageView dstView; // binarized image view
 
 	private JComboBox<String> methodList; // the selected binarization method
-	private JLabel statusLine; // to print some status text
+	private JTextArea statusArea; // to print some status text
 
 	/**
 	 * Algorithm to find the appropriate/desired threshold.
@@ -98,7 +104,9 @@ public class FloodFillingGui extends JPanel implements Observer {
 		// selector for the binarization method
 		JLabel methodText = new JLabel("Methode:");
 		String[] methodNames = { "---", "Verfahren mit Stack", "Verfahren mit Queue",
-				"sequentiellen Regionenmarkierung" };
+				"sequentiellen Regionenmarkierung",
+				"Optimiertes Verfahren mit Stack",
+				"Optimiertes Verfahren mit Queue"};
 
 		methodList = new JComboBox<String>(methodNames);
 		methodList.setSelectedIndex(0); // set initial method
@@ -122,7 +130,10 @@ public class FloodFillingGui extends JPanel implements Observer {
 		this.debugModeCheckbox = new JCheckBox("Debug mode");
 
 		// some status text
-		statusLine = new JLabel(" ");
+		statusArea = new JTextArea(TEXTAREA_ROWS, TEXTAREA_COLS);
+		statusArea.setEditable(false);
+		
+		JScrollPane scrollPane = new JScrollPane(statusArea);
 
 		// arrange all controls
 		JPanel controls = new JPanel(new GridBagLayout());
@@ -140,7 +151,7 @@ public class FloodFillingGui extends JPanel implements Observer {
 
 		add(controls, BorderLayout.NORTH);
 		add(imagesPanel, BorderLayout.CENTER);
-		add(statusLine, BorderLayout.SOUTH);
+		add(scrollPane, BorderLayout.SOUTH);
 
 		setBorder(BorderFactory.createEmptyBorder(border, border, border, border));
 	}
@@ -206,33 +217,37 @@ public class FloodFillingGui extends JPanel implements Observer {
 		// this.message = "Binarisieren mit \"" + methodName + "\"";
 		this.message = "Auffinden von Bildregionen mit \"" + methodName + "\" und \"" + neighbourMode + "\" ";
 
-		statusLine.setText(message);
+		statusArea.setText(message);
 
-		long startTime = System.currentTimeMillis();
-
+		long time = 0;
+		
 		switch (methodList.getSelectedIndex()) {
 		case 1: // depth first
-			message += "iterativem Verfahren mit Stack; ";
-
 			this.floodFillingAlgorithm = Factory.newDepthFirst(this);
-			showImageRegions(dstPixels);
+			time = showImageRegions(dstPixels);
+			message += "\nMax stack size: " + ((DepthFirst) floodFillingAlgorithm).getMaxStackSize();
 			break;
 		case 2: // breadth first
-			message += "iterativem Verfahren mit Queue; ";
-
 			this.floodFillingAlgorithm = Factory.newBreadthFirst(this);
-			showImageRegions(dstPixels);
+			time = showImageRegions(dstPixels);
+			message += "\nMax queue size: " + ((BreadthFirst) floodFillingAlgorithm).getMaxQueueSize();
 			break;
 		case 3: // sequentiellen Regionenmarkierung
-			message += "sequentieller Regionenmarkierung; ";
-
 			this.floodFillingAlgorithm = Factory.newSequential(this);
-			showImageRegions(dstPixels);
+			time = showImageRegions(dstPixels);
+			break;
+		case 4: // optimized depth first
+			this.floodFillingAlgorithm = Factory.newOptimizedDepthFirst(this);
+			time = showImageRegions(dstPixels);
+			message += "\nMax stack size: " + ((DepthFirst) floodFillingAlgorithm).getMaxStackSize();
+			break;
+		case 5: // optimized breadth first
+			this.floodFillingAlgorithm = Factory.newOptimizedBreadthFirst(this);
+			time = showImageRegions(dstPixels);
+			message += "\nMax queue size: " + ((BreadthFirst) floodFillingAlgorithm).getMaxQueueSize();
 			break;
 		// other cases: do not change dstPixels
 		}
-
-		long time = System.currentTimeMillis() - startTime;
 
 		if (!this.isDebug()) {
 			dstView.setPixels(dstPixels, width, height);
@@ -241,7 +256,7 @@ public class FloodFillingGui extends JPanel implements Observer {
 
 		// dstView.saveImage("out.png");
 
-		statusLine.setText(message + " in " + time + " ms");
+		statusArea.setText(message + "\nRequired time: " + time + " ms");
 	}
 
 	private Mode getMode() {
@@ -256,23 +271,35 @@ public class FloodFillingGui extends JPanel implements Observer {
 		return this.debugModeCheckbox.isSelected();
 	}
 
-	private void showImageRegions(int[] dstPixels) {
+	private long showImageRegions(int[] dstPixels) {
 		this.floodFillingAlgorithm.setMode(this.getMode());
 		this.floodFillingAlgorithm.setOriginalBinaryPixels(this.srcView.getImgWidth(), this.srcView.getImgHeight(),
 				this.srcView.getPixels());
 
 		if (this.isDebug()) {
 			// in debug mode, the regions will be drawn on single label change
+			long startTime = System.currentTimeMillis();
+			
 			this.floodFillingAlgorithm.execute();
+			
+			return System.currentTimeMillis() - startTime;
+			
 		} else {
 			// in non-debug mode, the regions will be drawn when all labels were
 			// set
 			this.floodFillingAlgorithm.deleteObservers();
 
+			// only measure labeling algorithm runtime, not the time to color pixels
+			long startTime = System.currentTimeMillis();
+			int[][] labeled2dPixels = this.floodFillingAlgorithm.execute();
+			long time = System.currentTimeMillis() - startTime;
+			
 			int[] labeledPixels = ImageUtil.getFlatArray(this.srcView.getImgWidth(), this.srcView.getImgHeight(),
-					this.floodFillingAlgorithm.execute());
+					labeled2dPixels);
 
 			this.colorRegionsByLabel(dstPixels, labeledPixels);
+			
+			return time;
 		}
 	}
 

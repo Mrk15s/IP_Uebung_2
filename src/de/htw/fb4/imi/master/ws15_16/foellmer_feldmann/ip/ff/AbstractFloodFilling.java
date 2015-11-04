@@ -78,6 +78,10 @@ public abstract class AbstractFloodFilling extends Observable {
 	protected boolean canBeLabeled(int x, int y) {
 		return 1 == this.originalBinaryPixels[x][y] && NOT_LABELED == this.labeledPixels[x][y];
 	}
+	
+	protected boolean isWithinImageBoundaries(int x, int y) {
+		return (x >= 0) && (x < width) && (y >= 0) && (y < height); 
+	}
 
 	protected void labelPixel(int x, int y, int label) {
 		this.labeledPixels[x][y] = label;

@@ -12,6 +12,8 @@ import javax.swing.JSlider;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.AbstractFloodFilling;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.BreadthFirst;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.DepthFirst;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.OptimizedBreadthFirst;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.OptimizedDepthFirst;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.Sequential;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.outline.Outline;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.treshold.IsoData;
@@ -60,6 +62,18 @@ public class Factory {
 	{
 		return new DepthFirst();
 	}
+	
+	public static AbstractFloodFilling newOptimizedDepthFirst(Observer observer) {
+		AbstractFloodFilling algorithm = newOptimizedDepthFirst();
+		algorithm.addObserver(observer);		
+		
+		return algorithm;
+	}
+	
+	public static AbstractFloodFilling newOptimizedDepthFirst()
+	{
+		return new OptimizedDepthFirst();
+	}
 
 	public static AbstractFloodFilling newBreadthFirst()
 	{
@@ -68,6 +82,18 @@ public class Factory {
 	
 	public static AbstractFloodFilling newBreadthFirst(Observer observer) {
 		AbstractFloodFilling algorithm = newBreadthFirst();
+		algorithm.addObserver(observer);		
+		
+		return algorithm;
+	}
+	
+	public static AbstractFloodFilling newOptimizedBreadthFirst()
+	{
+		return new OptimizedBreadthFirst();
+	}	
+	
+	public static AbstractFloodFilling newOptimizedBreadthFirst(Observer observer) {
+		AbstractFloodFilling algorithm = newOptimizedBreadthFirst();
 		algorithm.addObserver(observer);		
 		
 		return algorithm;
