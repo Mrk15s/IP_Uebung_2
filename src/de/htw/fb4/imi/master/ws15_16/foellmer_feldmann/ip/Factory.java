@@ -5,6 +5,8 @@
  */
 package de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip;
 
+import java.util.Observer;
+
 import javax.swing.JSlider;
 
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff.AbstractFloodFilling;
@@ -47,6 +49,13 @@ public class Factory {
 		return new Outline();
 	}
 	
+	public static AbstractFloodFilling newDepthFirst(Observer observer) {
+		AbstractFloodFilling algorithm = newDepthFirst();
+		algorithm.addObserver(observer);		
+		
+		return algorithm;
+	}
+	
 	public static AbstractFloodFilling newDepthFirst()
 	{
 		return new DepthFirst();
@@ -55,10 +64,24 @@ public class Factory {
 	public static AbstractFloodFilling newBreadthFirst()
 	{
 		return new BreadthFirst();
+	}	
+	
+	public static AbstractFloodFilling newBreadthFirst(Observer observer) {
+		AbstractFloodFilling algorithm = newBreadthFirst();
+		algorithm.addObserver(observer);		
+		
+		return algorithm;
 	}
 	
 	public static AbstractFloodFilling newSequential()
 	{
 		return new Sequential();
 	}
+
+	public static AbstractFloodFilling newSequential(Observer observer) {
+		AbstractFloodFilling algorithm = newSequential();
+		algorithm.addObserver(observer);		
+		
+		return algorithm;
+	}	
 }

@@ -5,7 +5,10 @@
  */
 package de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff;
 
+import java.util.Observable;
+
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.ImageUtil;
+import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.LabeledPoint;
 
 /**
  * [SHORT_DESCRIPTION] 
@@ -13,15 +16,15 @@ import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.ImageUtil;
  * @author Sascha Feldmann <sascha.feldmann@gmx.de>
  * @since 04.11.2015
  */
-public abstract class AbstractFloodFilling {
+public abstract class AbstractFloodFilling extends Observable {
 	
 	public static final int NOT_LABELED = 0;
 	public static final int START_LABEL = 1;
 
 	public enum Mode {
 		NEIGHBOURS4, NEIGHBOURS8
-	}
-
+	}	
+	
 	protected int[][] originalBinaryPixels;
 	protected int[][] labeledPixels;
 	protected int width;
@@ -73,6 +76,10 @@ public abstract class AbstractFloodFilling {
 	
 	protected void labelPixel(int u, int v, int label) {
 		this.labeledPixels[u][v] = label;
+		LabeledPoint labeledPixel = new LabeledPoint(u, v, label);
+		
+		this.setChanged();
+		this.notifyObservers(labeledPixel);
 	}
 	
 	/**
