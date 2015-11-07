@@ -7,7 +7,9 @@ package de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.ImageUtil;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.LabeledPoint;
@@ -22,74 +24,88 @@ public class Sequential extends AbstractFloodFilling {
 	private int lastExactlyOneNeighboursLabel;
 	private HashMap<LabeledPoint, Set<LabeledPoint>> collisions;
 	private LabeledPoint lastMoreThanOneNeighbourSmallestPoint;
-
-	/**
-	 * Set the original pixels by an 1-dimensional pixel array.
-	 * 
-	 * Internally, the pixels are stored as 2-dimensional array. For conversion,
-	 * hand in widht and height.
-	 * 
-	 * @param width
-	 * @param height
-	 * @param originalPixels
-	 */
-	// public void setOriginalBinaryPixels(int width, int height, int[]
-	// originalPixels) {
-	// this.width = width;
-	// this.height = height;
-	// this.originalBinaryPixels = new int[width][height];
-	// this.labeledPixels = new int[width][height];
-	//
-	// for (int x = 0; x < width; x++) {
-	// for (int y = 0; y < height; y++) {
-	// int pos = ImageUtil.calc1DPosition(width, x, y);
-	//
-	// if (ImageUtil.isForegoundPixel(originalPixels[pos])) {
-	// this.originalBinaryPixels[x][y] = 1;
-	// this.labeledPixels[x][y] = START_LABEL;
-	// } else {
-	// this.originalBinaryPixels[x][y] = 0;
-	// this.labeledPixels[x][y] = NOT_LABELED; // in the beginning,
-	// // all pixels are
-	// // not labeled
-	// }
-	// }
-	// }
-	// }
+	private TreeSet<Integer> freeLabels;
 
 	public int[][] execute() {
 		super.execute();
 
-		executeFloodFillingInScanLineOrder();
+		assignInitialLabels();
+		resolveLabelCollisions();
+		relabelImage();
 
 		return this.labeledPixels;
 	}
 
-	private void executeFloodFillingInScanLineOrder() {
+	private void assignInitialLabels() {
 		int label = START_LABEL;
 		this.collisions = new HashMap<>();
 
 		// walk through image pixels in scan-line order, execute
-		for (int x = 0; x < width; x++) {
-			for (int y = 0; y < height; y++) {
-				if (this.isForegroundPixel(x, y)) {
-					Set<LabeledPoint> neighbours = getNeighbours(x, y);
-
-					if (allNeighboursAreNotLabled(neighbours)) {
-						this.labelPixel(x, y, label);
-						label++;
-					} else if (exactlyOneNeighbourIsLabled(neighbours)) {
-						this.labelPixel(x, y, this.lastExactlyOneNeighboursLabel);
-					} else if (moreThanOneNeighbourIsLabled(neighbours)) {
-						this.labelPixel(x, y, this.lastMoreThanOneNeighbourSmallestPoint.getLabel());
-
-						this.registerCollision(this.lastMoreThanOneNeighbourSmallestPoint, neighbours);
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+					if (this.isForegroundPixel(x, y)) {
+						Set<LabeledPoint> neighbours = getNeighbours(x, y);
+	
+						if (allNeighboursAreBackgroundPixelsAndNotLabelledYet(neighbours)) {
+							this.labelPixel(x, y, label);
+							label++;
+						} else if (exactlyOneNeighbourLable(neighbours)) {
+							this.labelPixel(x, y, this.lastExactlyOneNeighboursLabel);
+						} else if (moreThanOneNeighbourIsLabled(neighbours)) {
+							this.labelPixel(x, y, this.lastMoreThanOneNeighbourSmallestPoint.getLabel());
+	
+							this.registerCollision(this.lastMoreThanOneNeighbourSmallestPoint, neighbours);
+						}
 					}
+				}
+		}		
+	}
+
+	private void resolveLabelCollisions() {
+		this.freeLabels = new TreeSet<>();
+		
+		for (LabeledPoint collisionPoint : this.collisions.keySet()) {
+			Set<LabeledPoint> collisionNeighbours = this.collisions.get(collisionPoint);
+			
+			for (LabeledPoint collisionNeighbour : collisionNeighbours) {
+				//this.labeledPixels[(int) collisionNeighbour.getX()][(int) collisionNeighbour.getY()] = collisionPoint.getLabel();
+				this.replaceAllLabels(collisionNeighbour.getLabel(), collisionPoint.getLabel());
+			}
+		}				
+	}
+	
+	private void relabelImage() {
+		int nextFreeLabelIndex = 0;
+		Map<Integer, Integer> newLabelMap = new HashMap<>();		
+		
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				int currentLabel = this.labeledPixels[x][y];
+				if (NOT_LABELED != currentLabel
+						&& !this.freeLabels.contains(currentLabel)) {
+					
+					if (!newLabelMap.containsKey(currentLabel)) {
+						newLabelMap.put(currentLabel, (int) this.freeLabels.toArray()[nextFreeLabelIndex]);
+						nextFreeLabelIndex++;
+					}
+					
+					this.labeledPixels[x][y] = newLabelMap.get(currentLabel);					 
+					//this.labeledPixels[x][y] = this.freeLabels.get(this.labeledPixels[x][y]);
 				}
 			}
 		}
-
-		System.out.println("Bla");
+	}
+	
+	private void replaceAllLabels(int label, int byLabel) {
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				if (label == this.labeledPixels[x][y]) {
+					this.labeledPixels[x][y] = byLabel;
+				}
+			}
+		}		
+		
+		this.freeLabels.add(label);
 	}
 
 	private Set<LabeledPoint> getNeighbours(int x, int y) {
@@ -131,9 +147,10 @@ public class Sequential extends AbstractFloodFilling {
 		}
 	}
 
-	private boolean allNeighboursAreNotLabled(Set<LabeledPoint> neighbours) {
+	private boolean allNeighboursAreBackgroundPixelsAndNotLabelledYet(Set<LabeledPoint> neighbours) {
 		for (LabeledPoint neighbour : neighbours) {
-			if (this.isForegroundPixel((int) neighbour.getX(), (int) neighbour.getY())) {
+			if (this.isForegroundPixel((int) neighbour.getX(), (int) neighbour.getY())
+					&& this.isLabeled((int) neighbour.getX(), (int) neighbour.getY())) {
 				return false;
 			}
 		}
@@ -141,56 +158,52 @@ public class Sequential extends AbstractFloodFilling {
 		return true;
 	}
 
-	private boolean exactlyOneNeighbourIsLabled(Set<LabeledPoint> neighbours) {
-		int labeledNeighbourCount = 0;
-		int lastLabel = 0;
 
+	private boolean exactlyOneNeighbourLable(Set<LabeledPoint> neighbours) {
+		Set<Integer> neighbourLabels = new HashSet<>();
+	
 		for (LabeledPoint neighbour : neighbours) {
-			if (neighbour.getLabel() >= START_LABEL) {
-				labeledNeighbourCount++;
-				lastLabel = neighbour.getLabel();
+			if (neighbour.getLabel() >= START_LABEL
+					&& !neighbourLabels.contains(neighbour.getLabel())) {
+				neighbourLabels.add(neighbour.getLabel());
 			}
 		}
 
-		boolean isExactlyOneNeighbour = 1 == labeledNeighbourCount;
+		boolean hasExactlyOneLabelInNeighbourhood = 1 == neighbourLabels.size();
 
-		if (isExactlyOneNeighbour) {
-			this.lastExactlyOneNeighboursLabel = lastLabel;
+		if (hasExactlyOneLabelInNeighbourhood) {
+			this.lastExactlyOneNeighboursLabel = (int) neighbourLabels.toArray()[0];
 		}
 
-		return isExactlyOneNeighbour;
+		return hasExactlyOneLabelInNeighbourhood;
 	}
 
 	private boolean moreThanOneNeighbourIsLabled(Set<LabeledPoint> neighbours) {
-		int labeledNeighbourCount = 0;
-		LabeledPoint smallestLabel = null;
-
+		Set<LabeledPoint> labeledNeighbours = new TreeSet<>(new LabeledPointComparator());
+		
 		for (LabeledPoint neighbour : neighbours) {
-			if (neighbour.getLabel() >= START_LABEL) {
-				labeledNeighbourCount++;
-
-				if (null == smallestLabel || neighbour.getLabel() < smallestLabel.getLabel()) {
-					smallestLabel = neighbour;
-				}
+			if (neighbour.getLabel() >= START_LABEL
+					&& !labeledNeighbours.contains(neighbour)) {
+				labeledNeighbours.add(neighbour);
 			}
 		}
 
-		boolean moreThanOneNeighbourCount = 1 < labeledNeighbourCount;
+		boolean moreThanOneLabelInNeighbourhood = 1 < labeledNeighbours.size();
 
-		if (moreThanOneNeighbourCount) {
-			this.lastMoreThanOneNeighbourSmallestPoint = smallestLabel;
+		if (moreThanOneLabelInNeighbourhood) {
+			this.lastMoreThanOneNeighbourSmallestPoint = (LabeledPoint) labeledNeighbours.toArray()[0];
 		}
 
-		return moreThanOneNeighbourCount;
+		return moreThanOneLabelInNeighbourhood;
 	}
 
 	private void registerCollision(LabeledPoint lastMoreThanOneNeighbourSmallestPoint, Set<LabeledPoint> neighbours) {
 		for (LabeledPoint neighbour : neighbours) {
-			if (lastMoreThanOneNeighbourSmallestPoint.equals(neighbour)) {
+			if (lastMoreThanOneNeighbourSmallestPoint.getLabel() == neighbour.getLabel()) {
 				continue;
 			}
 
-			if (neighbour.getLabel() > START_LABEL) {
+			if (neighbour.getLabel() >= START_LABEL) {
 				this.addCollision(lastMoreThanOneNeighbourSmallestPoint, neighbour);
 			}
 		}
