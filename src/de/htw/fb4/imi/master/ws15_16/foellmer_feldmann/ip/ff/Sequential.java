@@ -7,11 +7,9 @@ package de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.ImageUtil;
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.LabeledPoint;
 
 /**
@@ -25,6 +23,7 @@ public class Sequential extends AbstractFloodFilling {
 	private HashMap<LabeledPoint, Set<LabeledPoint>> collisions;
 	private LabeledPoint lastMoreThanOneNeighbourSmallestPoint;
 	private TreeSet<Integer> freeLabels;
+	private HashMap<Integer, Integer> newLabelMap;
 
 	public int[][] execute() {
 		super.execute();
@@ -76,7 +75,7 @@ public class Sequential extends AbstractFloodFilling {
 	
 	private void relabelImage() {
 		int nextFreeLabelIndex = 0;
-		Map<Integer, Integer> newLabelMap = new HashMap<>();		
+		this.newLabelMap = new HashMap<>();		
 		
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
@@ -84,13 +83,16 @@ public class Sequential extends AbstractFloodFilling {
 				if (NOT_LABELED != currentLabel
 						&& !this.freeLabels.contains(currentLabel)) {
 					
-					if (!newLabelMap.containsKey(currentLabel)) {
+					if (!newLabelMap.containsKey(currentLabel)
+							&& currentLabel > (int) this.freeLabels.toArray()[nextFreeLabelIndex]) {
+						// assign the current label one of the free ones, starting from the smallest one
 						newLabelMap.put(currentLabel, (int) this.freeLabels.toArray()[nextFreeLabelIndex]);
 						nextFreeLabelIndex++;
 					}
 					
-					this.labeledPixels[x][y] = newLabelMap.get(currentLabel);					 
-					//this.labeledPixels[x][y] = this.freeLabels.get(this.labeledPixels[x][y]);
+					if (newLabelMap.containsKey(currentLabel)) {
+						this.labeledPixels[x][y] = newLabelMap.get(currentLabel);
+					}
 				}
 			}
 		}
