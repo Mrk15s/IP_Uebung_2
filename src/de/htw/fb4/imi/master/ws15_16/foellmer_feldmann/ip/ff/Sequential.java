@@ -5,9 +5,9 @@
  */
 package de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.ff;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.LabeledPoint;
@@ -20,10 +20,10 @@ import de.htw.fb4.imi.master.ws15_16.foellmer_feldmann.ip.util.LabeledPoint;
 public class Sequential extends AbstractFloodFilling {
 
 	private int lastExactlyOneNeighboursLabel;
-	private HashMap<LabeledPoint, Set<LabeledPoint>> collisions;
+	private TreeMap<LabeledPoint, TreeSet<LabeledPoint>> collisions;
 	private LabeledPoint lastMoreThanOneNeighbourSmallestPoint;
 	private TreeSet<Integer> freeLabels;
-	private HashMap<Integer, Integer> newLabelMap;
+	private TreeMap<Integer, Integer> newLabelMap;
 
 	public int[][] execute() {
 		super.execute();
@@ -37,7 +37,7 @@ public class Sequential extends AbstractFloodFilling {
 
 	private void assignInitialLabels() {
 		int label = START_LABEL;
-		this.collisions = new HashMap<>();
+		this.collisions = new TreeMap<>(new LabeledPointComparator());
 
 		// walk through image pixels in scan-line order, execute
 		for (int y = 0; y < height; y++) {
@@ -61,21 +61,42 @@ public class Sequential extends AbstractFloodFilling {
 	}
 
 	private void resolveLabelCollisions() {
-		this.freeLabels = new TreeSet<>();
+		this.freeLabels = new TreeSet<>();	
 		
+		// map to keep collision labels that need to be replaced later
+		this.newLabelMap = new TreeMap<Integer, Integer>();
 		for (LabeledPoint collisionPoint : this.collisions.keySet()) {
 			Set<LabeledPoint> collisionNeighbours = this.collisions.get(collisionPoint);
 			
-			for (LabeledPoint collisionNeighbour : collisionNeighbours) {
-				//this.labeledPixels[(int) collisionNeighbour.getX()][(int) collisionNeighbour.getY()] = collisionPoint.getLabel();
-				this.replaceAllLabels(collisionNeighbour.getLabel(), collisionPoint.getLabel());
+			for (LabeledPoint collisionNeighbour : collisionNeighbours) {				
+				if (!this.newLabelMap.containsKey(collisionNeighbour.getLabel())) {
+					this.newLabelMap.put(collisionNeighbour.getLabel(), collisionPoint.getLabel());
+					this.freeLabels.add(collisionNeighbour.getLabel());
+				}
 			}
-		}				
+		}		
+		
+		// replace labels in map
+		this.replaceAllLabels();
+	}
+	
+	private void replaceAllLabels() {
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				int oldLabel = this.labeledPixels[x][y];
+				while (this.newLabelMap.containsKey(oldLabel)) {
+					// be transitive: walk through label replacement chain
+					Integer newLabel = this.newLabelMap.get(oldLabel);
+					this.labeledPixels[x][y] = newLabel;
+					oldLabel = newLabel;
+				}
+			}
+		}		
 	}
 	
 	private void relabelImage() {
 		int nextFreeLabelIndex = 0;
-		this.newLabelMap = new HashMap<>();		
+		this.newLabelMap = new TreeMap<>();		
 		
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
@@ -96,18 +117,6 @@ public class Sequential extends AbstractFloodFilling {
 				}
 			}
 		}
-	}
-	
-	private void replaceAllLabels(int label, int byLabel) {
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				if (label == this.labeledPixels[x][y]) {
-					this.labeledPixels[x][y] = byLabel;
-				}
-			}
-		}		
-		
-		this.freeLabels.add(label);
 	}
 
 	private Set<LabeledPoint> getNeighbours(int x, int y) {
@@ -213,7 +222,7 @@ public class Sequential extends AbstractFloodFilling {
 
 	private void addCollision(LabeledPoint lastMoreThanOneNeighbourSmallestPoint, LabeledPoint neighbour) {
 		if (!this.collisions.containsKey(lastMoreThanOneNeighbourSmallestPoint)) {
-			this.collisions.put(lastMoreThanOneNeighbourSmallestPoint, new HashSet<LabeledPoint>());
+			this.collisions.put(lastMoreThanOneNeighbourSmallestPoint, new TreeSet<LabeledPoint>(new LabeledPointComparator()));
 		}
 
 		this.collisions.get(lastMoreThanOneNeighbourSmallestPoint).add(neighbour);

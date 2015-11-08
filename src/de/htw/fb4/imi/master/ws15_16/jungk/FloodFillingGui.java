@@ -116,7 +116,7 @@ public class FloodFillingGui extends JPanel implements Observer {
 			}
 		});
 
-		String[] neighbourModes = { "4 neighbours", "8 neighbours" };
+		String[] neighbourModes = { "8 neighbours", "4 neighbours" };
 
 		neighbourModeBox = new JComboBox<String>(neighbourModes);
 		neighbourModeBox.setSelectedIndex(0); // set initial method
@@ -261,9 +261,9 @@ public class FloodFillingGui extends JPanel implements Observer {
 
 	private Mode getMode() {
 		if (this.neighbourModeBox.getSelectedIndex() == 0) {
-			return Mode.NEIGHBOURS4;
-		} else {
 			return Mode.NEIGHBOURS8;
+		} else {
+			return Mode.NEIGHBOURS4;
 		}
 	}
 
