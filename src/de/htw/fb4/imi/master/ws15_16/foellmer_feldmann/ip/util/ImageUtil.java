@@ -52,8 +52,8 @@ public class ImageUtil {
 	{
 		Map<Integer, Integer> colorMap = getLabelColorMap();
 		
-		if (colorMap.containsKey(label)) {
-			return colorMap.get(label);
+		if (colorMap.containsKey(label%9)) {
+			return colorMap.get(label%9);
 		} else {
 			// no color for label number defined
 			return Colors.BLACK;
